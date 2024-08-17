@@ -41,7 +41,7 @@ async function setupBrowserAndPage(key) {
     const setupProcess = async () => {
         try {
             const browser = await puppeteer.launch({ 
-                headless: false,
+                headless: true,
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
                 // defaultViewport: null,
                 // args: ['--start-maximized']
@@ -139,7 +139,7 @@ async function setupBrowserAndPage(key) {
                     
                     if ( (!existingData && newData) || (newData && existingData && newData.lastPacketTime !== existingData.lastPacketTime) ) {
                         latestSatelliteData.set(hashedKey, newData);
-                        console.log("updated data for ", key);
+//                        console.log("updated data for ", key);
                     }
 
                 } catch (error) {
@@ -183,7 +183,7 @@ app.get('/api/listen', async (req, res) => {
 app.get('/api/stats', (req, res) => {
     const { key } = req.query;
     if (!key) {
-        return res.status(400).json({ error: 'Key is required' });
+        return res.status(400).json({ error: 'Key is required (last 5 chars in SN)' });
     }
 
     const hashedKey = crypto.createHash('sha256').update(key).digest('hex');
