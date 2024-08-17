@@ -41,7 +41,7 @@ async function setupBrowserAndPage(key) {
     const setupProcess = async () => {
         try {
             const browser = await puppeteer.launch({ 
-                headless: false,
+                headless: true,
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
                 // defaultViewport: null,
                 // args: ['--start-maximized']
@@ -59,6 +59,7 @@ async function setupBrowserAndPage(key) {
 
 
             await page.evaluate(() => {
+                //monkeypatch Meteor to listen for responses
                 if (Meteor && Meteor.connection) {
                     const originalCall = Meteor.call;
                     Meteor.call = function(name) {
