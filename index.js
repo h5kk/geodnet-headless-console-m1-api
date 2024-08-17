@@ -41,7 +41,7 @@ async function setupBrowserAndPage(key) {
     const setupProcess = async () => {
         try {
             const browser = await puppeteer.launch({ 
-                headless: true,
+                headless: false,
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
                 // defaultViewport: null,
                 // args: ['--start-maximized']
@@ -59,7 +59,6 @@ async function setupBrowserAndPage(key) {
 
 
             await page.evaluate(() => {
-                //monkeypatch Meteor to listen for responses
                 if (Meteor && Meteor.connection) {
                     const originalCall = Meteor.call;
                     Meteor.call = function(name) {
@@ -72,6 +71,7 @@ async function setupBrowserAndPage(key) {
                             args[args.length - 1] = function(error, result) {
                                 //console.log('Meteor Method Response:', name, { error, result });
                                 if (name === 'getRealData') {
+                                    console.log("updating data")
                                     window.lastData = result
                                 }
 
@@ -137,8 +137,9 @@ async function setupBrowserAndPage(key) {
                     const newData = await getLastData();
                     const existingData = latestSatelliteData.get(hashedKey);
                     
-                    if ( !existingData || newData.lastPacketTime !== existingData.lastPacketTime ) {
+                    if ( (!existingData && newData) || (newData && existingData && newData.lastPacketTime !== existingData.lastPacketTime) ) {
                         latestSatelliteData.set(hashedKey, newData);
+                        console.log("updated data for ", key);
                     }
 
                 } catch (error) {
