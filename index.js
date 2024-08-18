@@ -33,7 +33,26 @@ function aggregateSatInfo(data) {
     }
   
     return result;
-  }
+}
+
+  function processHourlyData(data) {
+
+    if ( !data || !data.xData ) {
+        return null;
+    }
+
+    return data.xData.map((dateTime, index) => {
+        // Parse the date and time
+        const [datePart, hourPart] = dateTime.split(' ');
+        const isoDateTime = `${datePart}T${hourPart.padStart(2, '0')}:00:00Z`;
+
+        return {
+            timestamp: new Date(isoDateTime).toISOString(),
+            onLineRate: data.yData.onLineRate[index],
+            satRate: data.yData.satRate[index]
+        };
+    });
+}
 
 async function setupBrowserAndPage(key) {
     const hashedKey = crypto.createHash('sha256').update(key).digest('hex');
@@ -41,7 +60,7 @@ async function setupBrowserAndPage(key) {
     const setupProcess = async () => {
         try {
             const browser = await puppeteer.launch({ 
-                headless: false,
+                headless: true,
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
                 // defaultViewport: null,
                 // args: ['--start-maximized']
@@ -71,8 +90,10 @@ async function setupBrowserAndPage(key) {
                             args[args.length - 1] = function(error, result) {
                                 //console.log('Meteor Method Response:', name, { error, result });
                                 if (name === 'getRealData') {
-                                    console.log("updating data")
+                                    //console.log("updating data")
                                     window.lastData = result
+                                } else if ( name == 'getOnLine3DayMiners' ) {
+                                    window.lastUptimeData = result
                                 }
 
                                 lastArg(error, result);
@@ -95,7 +116,10 @@ async function setupBrowserAndPage(key) {
             });
 
             const getLastData = async () => {
-                return await page.evaluate(() => window.lastData);
+                return await page.evaluate(() => ({
+                    ...window.lastData,
+                    hourly: window.lastUptimeData
+                }));
             };
 
             await page.evaluate((key) => {
@@ -135,12 +159,17 @@ async function setupBrowserAndPage(key) {
             const intervalId = setInterval(async () => {
                 try {
                     const newData = await getLastData();
+
+                    //console.log("newdata is ", newData)
+                    //const newHourlyData = await getLastHourlyData();
                     const existingData = latestSatelliteData.get(hashedKey);
                     
                     if ( (!existingData && newData) || (newData && existingData && newData.lastPacketTime !== existingData.lastPacketTime) ) {
                         latestSatelliteData.set(hashedKey, newData);
-                        console.log("updated data for ", key);
+//                        console.log("updated data for ", key);
                     }
+
+
 
                 } catch (error) {
                     console.error(`Error extracting data for ${key}:`, error);
@@ -183,7 +212,7 @@ app.get('/api/listen', async (req, res) => {
 app.get('/api/stats', (req, res) => {
     const { key } = req.query;
     if (!key) {
-        return res.status(400).json({ error: 'Key is required' });
+        return res.status(400).json({ error: 'Key is required (last 5 chars in SN)' });
     }
 
     const hashedKey = crypto.createHash('sha256').update(key).digest('hex');
@@ -200,6 +229,7 @@ app.get('/api/stats', (req, res) => {
         dataByte: data.dataByte,
         latency: data.latency,
         satInfo: aggregateSatInfo(data),
+        hourlyData: processHourlyData(data.hourly),
     };
 
     res.json(response);
