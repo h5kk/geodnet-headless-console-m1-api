@@ -1,9 +1,11 @@
 const puppeteer = require('puppeteer');
 const express = require('express');
 const crypto = require('crypto');
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 const port = process.env.PORT || 3000;
 
