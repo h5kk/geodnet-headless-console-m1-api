@@ -51,7 +51,7 @@ function aggregateSatInfo(data) {
             onLineRate: data.yData.onLineRate[index],
             satRate: data.yData.satRate[index]
         };
-    });
+    }).filter(d => !!d.onLineRate || !!d.satRate);
 }
 
 async function setupBrowserAndPage(key) {
