@@ -13,9 +13,9 @@ const latestSatelliteData = new Map();
 function countEffectiveSats(data, snrThreshold = 32) {
     const satSystems = ['satinfoG', 'satinfoR', 'satinfoE', 'satinfoC'];
     
-    return satSystems.reduce((count, system) => {
+    return satSystems ? satSystems.reduce((count, system) => {
         return count + data.satInfo[system].filter(sat => sat.snr >= snrThreshold).length;
-    }, 0);
+    }, 0) : [];
 }
 
 function aggregateSatInfo(data) {
@@ -51,7 +51,7 @@ function aggregateSatInfo(data) {
             onLineRate: data.yData.onLineRate[index],
             satRate: data.yData.satRate[index]
         };
-    }).filter(d => !!d.onLineRate || !!d.satRate);
+    }).filter(d => typeof d.onLineRate !== 'undefined');
 }
 
 async function setupBrowserAndPage(key) {
