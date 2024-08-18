@@ -13,7 +13,7 @@ const latestSatelliteData = new Map();
 function countEffectiveSats(data, snrThreshold = 32) {
     const satSystems = ['satinfoG', 'satinfoR', 'satinfoE', 'satinfoC'];
     
-    return satSystems ? satSystems.reduce((count, system) => {
+    return !!satSystems.satInfoG ? satSystems.reduce((count, system) => {
         return count + data.satInfo[system].filter(sat => sat.snr >= snrThreshold).length;
     }, 0) : [];
 }
