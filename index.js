@@ -84,8 +84,7 @@ async function setupBrowserAndPage(key) {
                     const originalCall = Meteor.call;
                     Meteor.call = function(name) {
                         const args = Array.from(arguments);
-                        //console.log('Meteor Method Call:', name, args.slice(1, -1));
-                        
+                       
                         // Check if the last argument is a callback
                         const lastArg = args[args.length - 1];
                         if (typeof lastArg === 'function') {
@@ -134,44 +133,14 @@ async function setupBrowserAndPage(key) {
                 }
             }, key);
 
-            // await page.waitForSelector('#mount_detail');
-
-            // const extractSatelliteData = async () => {
-            //     return await page.evaluate(() => {
-            //         const statsContainers = document.querySelectorAll('.ui.mini.statistic');
-            //         for (const container of statsContainers) {
-            //             const label = container.querySelector('.label');
-            //             if (label && label.textContent.includes('effective satellite no. / total satellite no.')) {
-            //                 const valueDiv = container.querySelector('.value');
-            //                 if (valueDiv) {
-            //                     const [effective, total] = valueDiv.textContent.split('/').map(s => s.trim());
-            //                     return { 
-            //                         effective_satellites: isNaN(+effective) ? 0 : +effective, 
-            //                         total_satellites: isNaN(+total) ? 0 : +total
-            //                     };
-            //                 }
-            //             }
-            //         }
-            //         return null;
-            //     });
-            // };
-
-            //latestSatelliteData.set(hashedKey, await extractSatelliteData());
-
             const intervalId = setInterval(async () => {
                 try {
                     const newData = await getLastData();
-
-                    //console.log("newdata is ", newData)
-                    //const newHourlyData = await getLastHourlyData();
                     const existingData = latestSatelliteData.get(hashedKey);
                     
                     if ( (!existingData && newData) || (newData && existingData && newData.lastPacketTime !== existingData.lastPacketTime) ) {
                         latestSatelliteData.set(hashedKey, newData);
-//                        console.log("updated data for ", key);
                     }
-
-
 
                 } catch (error) {
                     console.error(`Error extracting data for ${key}:`, error);
