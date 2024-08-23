@@ -1,4 +1,4 @@
-FROM node:lts-buster-slim
+FROM node:lts-bullseye-slim
 
 # Prevent dpkg errors
 ENV DEBIAN_FRONTEND=noninteractive
@@ -42,13 +42,19 @@ RUN apt-get update && apt-get install -y \
     libxtst6 \
     lsb-release \
     xdg-utils \
-    --no-install-recommends && \
-    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' && \
-    apt-get update && \
-    apt-get install -y google-chrome-stable --no-install-recommends && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/* /var/cache/apt/archives/*
+    --no-install-recommends
+
+# Add Google Chrome repository
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+
+# Install Google Chrome
+RUN apt-get update && apt-get install -y \
+    google-chrome-stable \
+    --no-install-recommends
+
+# Clean up
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /var/cache/apt/* /var/cache/apt/archives/*
 
 # Set the working directory
 WORKDIR /usr/src/app
