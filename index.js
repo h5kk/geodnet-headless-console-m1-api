@@ -85,7 +85,7 @@ async function setupBrowserAndPage(key) {
 
             await page.type('#mount_query', key);
 
-            await page.waitForSelector('.mineTableColumn');
+            await page.waitForSelector('.mineTableColumn', { timeout: 90000 });
 
 
             await page.evaluate(() => {
