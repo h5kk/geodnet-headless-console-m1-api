@@ -16,12 +16,21 @@ function countEffectiveSats(data, snrThreshold = 32) {
     const satSystems = ['satinfoG', 'satinfoR', 'satinfoE', 'satinfoC'];
     
     return satSystems.reduce((count, system) => {
+        if ( !data.hasOwnProperty('satInfo') || data.satInfo.hasOwnProperty('system') || !Array.isArray(data.satInfo[system]) ) {
+            return count;
+        }
+
         return count + data.satInfo[system].filter(sat => sat.snr >= snrThreshold).length;
     }, 0);
 }
 
 function aggregateSatInfo(data) {
     const result = [];
+
+    if ( !data || !data.satInfo ) {
+        return result;
+    }
+
     const satInfoKeys = Object.keys(data.satInfo);
   
     for (const key of satInfoKeys) {
@@ -134,30 +143,6 @@ async function setupBrowserAndPage(key) {
                 }
             }, key);
 
-            // await page.waitForSelector('#mount_detail');
-
-            // const extractSatelliteData = async () => {
-            //     return await page.evaluate(() => {
-            //         const statsContainers = document.querySelectorAll('.ui.mini.statistic');
-            //         for (const container of statsContainers) {
-            //             const label = container.querySelector('.label');
-            //             if (label && label.textContent.includes('effective satellite no. / total satellite no.')) {
-            //                 const valueDiv = container.querySelector('.value');
-            //                 if (valueDiv) {
-            //                     const [effective, total] = valueDiv.textContent.split('/').map(s => s.trim());
-            //                     return { 
-            //                         effective_satellites: isNaN(+effective) ? 0 : +effective, 
-            //                         total_satellites: isNaN(+total) ? 0 : +total
-            //                     };
-            //                 }
-            //             }
-            //         }
-            //         return null;
-            //     });
-            // };
-
-            //latestSatelliteData.set(hashedKey, await extractSatelliteData());
-
             const intervalId = setInterval(async () => {
                 try {
                     const newData = await getLastData();
@@ -221,7 +206,7 @@ app.get('/api/stats', (req, res) => {
     const data = latestSatelliteData.get(hashedKey);
     
     if (!data) {
-        return res.status(404).json({ error: 'No data found for this key' });
+        return res.status(404).json({ error: `Miner with key '${key}' is not monitored (or have not come up yet). Start monitor by calling /api/listen?key=${key}` });
     }
 
     const response = {
