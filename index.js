@@ -93,8 +93,7 @@ async function setupBrowserAndPage(key) {
                     const originalCall = Meteor.call;
                     Meteor.call = function(name) {
                         const args = Array.from(arguments);
-                        //console.log('Meteor Method Call:', name, args.slice(1, -1));
-                        
+                       
                         // Check if the last argument is a callback
                         const lastArg = args[args.length - 1];
                         if (typeof lastArg === 'function') {
@@ -146,17 +145,11 @@ async function setupBrowserAndPage(key) {
             const intervalId = setInterval(async () => {
                 try {
                     const newData = await getLastData();
-
-                    //console.log("newdata is ", newData)
-                    //const newHourlyData = await getLastHourlyData();
                     const existingData = latestSatelliteData.get(hashedKey);
                     
                     if ( (!existingData && newData) || (newData && existingData && newData.lastPacketTime !== existingData.lastPacketTime) ) {
                         latestSatelliteData.set(hashedKey, newData);
-//                        console.log("updated data for ", key);
                     }
-
-
 
                 } catch (error) {
                     console.error(`Error extracting data for ${key}:`, error);
