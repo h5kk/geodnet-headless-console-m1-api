@@ -9,8 +9,11 @@ app.use(cors());
 
 const port = process.env.PORT || 3000;
 
+const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+
 const activeBrowsers = new Map();
 const latestSatelliteData = new Map();
+const lastActivityTime = new Map();
 
 function countEffectiveSats(data, snrThreshold = 32) {
     const satSystems = ['satinfoG', 'satinfoR', 'satinfoE', 'satinfoC'];
@@ -67,6 +70,8 @@ function aggregateSatInfo(data) {
 
 async function setupBrowserAndPage(key) {
     const hashedKey = crypto.createHash('sha256').update(key).digest('hex');
+
+    console.log(`Setting up browser for key: ${key}`);
 
     const setupProcess = async () => {
         try {
@@ -159,7 +164,7 @@ async function setupBrowserAndPage(key) {
                 }
             }, 1000);
 
-            activeBrowsers.set(key, { browser, page });
+            activeBrowsers.set(key, { browser, page, intervalId });
             console.log(`Listener for ${key} started successfully.`);
         } catch (error) {
             console.error(`Error setting up browser for ${key}:`, error);
@@ -169,6 +174,36 @@ async function setupBrowserAndPage(key) {
 
     await setupProcess();
 }
+
+async function shutdownBrowser(key) {
+    if (activeBrowsers.has(key)) {
+        const { browser, intervalId } = activeBrowsers.get(key);
+        clearInterval(intervalId);
+        await browser.close();
+        activeBrowsers.delete(key);
+
+        const hashedKey = crypto.createHash('sha256').update(key).digest('hex');
+        latestSatelliteData.delete(hashedKey);
+        lastActivityTime.delete(key);
+
+        console.log(`Stopped listening for key: ${key}`);
+    }
+}
+
+function updateLastActivityTime(key) {
+    lastActivityTime.set(key, Date.now());
+}
+
+//Check for inactivity and shutdown browser
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, lastActivity] of lastActivityTime.entries()) {
+        if (now - lastActivity > INACTIVITY_TIMEOUT) {
+            console.log(`Inactivity timeout reached for key: ${key}`);
+            shutdownBrowser(key);
+        }
+    }
+}, 60000); // Check every minute
 
 app.get('/api/listen', async (req, res) => {
     const { key } = req.query;
@@ -182,6 +217,7 @@ app.get('/api/listen', async (req, res) => {
 
     try {
         setupBrowserAndPage(key);
+        updateLastActivityTime(key);
         res.json({ message: `Started listening for key: ${key}` });
     } catch (error) {
         console.error(error);
@@ -189,17 +225,73 @@ app.get('/api/listen', async (req, res) => {
     }
 });
 
-app.get('/api/stats', (req, res) => {
+app.get('/api/shutdown', async (req, res) => {
     const { key } = req.query;
+
+    console.log('Shutdown request received for key:', key);
+
+    if (!key) {
+        return res.status(400).json({ error: 'Key is required' });
+    }
+
+    if (!activeBrowsers.has(key)) {
+        return res.status(404).json({ error: 'No active browser found for this key' });
+    }
+
+    try {
+        await shutdownBrowser(key);
+        res.json({ message: `Stopped listening for key: ${key}` });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to stop browser' });
+    }
+});
+
+app.get('/api/stats', async (req, res) => {
+    const { key, autostart = 'false' } = req.query;
     if (!key) {
         return res.status(400).json({ error: 'Key is required (last 5 chars in SN)' });
     }
 
     const hashedKey = crypto.createHash('sha256').update(key).digest('hex');
-    const data = latestSatelliteData.get(hashedKey);
+
+    if (!activeBrowsers.has(key)) {
+        if (autostart.toLowerCase() === 'true') {
+            try {
+                await setupBrowserAndPage(key);
+            } catch (error) {
+                return res.status(500).json({ error: 'Failed to start monitoring' });
+            }
+        } else {
+            return res.status(404).json({ error: `Miner with key '${key}' is not monitored. Start monitor by calling /api/listen?key=${key} or use autostart=true parameter` });
+        }
+    }
+
+    updateLastActivityTime(key);
+
+    // Wait for data to be available (max 30 seconds)
+    let retries = 45;
+    while (retries > 0 && !latestSatelliteData.has(hashedKey)) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        retries--;
+    }
+
+    let data = latestSatelliteData.get(hashedKey);
     
     if (!data) {
-        return res.status(404).json({ error: `Miner with key '${key}' is not monitored (or have not come up yet). Start monitor by calling /api/listen?key=${key}` });
+        return res.status(404).json({ error: `No data available for key '${key}' after 30 seconds` });
+    }
+
+        // Additional 5-second wait for effective satellites update
+    let effectiveSatellites = countEffectiveSats(data);
+    
+    if (effectiveSatellites === 0) {
+        for (let i = 0; i < 5; i++) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            data = latestSatelliteData.get(hashedKey);
+            effectiveSatellites = countEffectiveSats(data);
+            if (effectiveSatellites > 0) break;
+        }
     }
 
     const response = {
@@ -215,15 +307,20 @@ app.get('/api/stats', (req, res) => {
     res.json(response);
 });
 
+
+
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
 
 process.on('SIGINT', async () => {
     console.log('Shutting down gracefully');
-    for (const { browser, intervalId } of activeBrowsers.values()) {
+    for (const [key, { browser, intervalId }] of activeBrowsers.entries()) {
         clearInterval(intervalId);
         await browser.close();
     }
+    activeBrowsers.clear();
+    latestSatelliteData.clear();
+    lastActivityTime.clear();
     process.exit();
 });
