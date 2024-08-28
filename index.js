@@ -75,8 +75,9 @@ async function setupBrowserAndPage(key) {
 
     const setupProcess = async () => {
         try {
+            //launch browser
             const browser = await puppeteer.launch({ 
-                headless: true,
+                headless: false,
                 args: ['--no-sandbox', '--disable-setuid-sandbox']
                 // defaultViewport: null,
                 // args: ['--start-maximized']
@@ -84,9 +85,18 @@ async function setupBrowserAndPage(key) {
 
             const page = await browser.newPage();
 
+            //load geodnet console, map
             await page.goto('https://console.geodnet.com/map');
 
-            await page.waitForSelector('#mount_query', { timeout: 90000 });
+            // Wait for the loading dimmer to become hidden
+            console.log("waiting for map")
+            await page.waitForFunction(
+                () => !document.querySelector('.ui.active.dimmer.loadingVerifyMountpoint') || 
+                       document.querySelector('.ui.active.dimmer.loadingVerifyMountpoint').style.display === 'none',
+                { timeout: 90000 }
+            );
+            console.log("loaded map")
+
 
             await page.type('#mount_query', key);
 
