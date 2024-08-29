@@ -14,6 +14,7 @@ const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
 const activeBrowsers = new Map();
 const latestSatelliteData = new Map();
 const lastActivityTime = new Map();
+const setupInProgress = new Set();
 
 function countEffectiveSats(data, snrThreshold = 32) {
     const satSystems = ['satinfoG', 'satinfoR', 'satinfoE', 'satinfoC'];
@@ -71,6 +72,12 @@ function aggregateSatInfo(data) {
 async function setupBrowserAndPage(key) {
     const hashedKey = crypto.createHash('sha256').update(key).digest('hex');
 
+    if (setupInProgress.has(key)) {
+        console.log(`Setup already in progress for key: ${key}`);
+        return;
+    }
+
+    setupInProgress.add(key);
     console.log(`Setting up browser for key: ${key}`);
 
     const setupProcess = async () => {
@@ -179,6 +186,8 @@ async function setupBrowserAndPage(key) {
         } catch (error) {
             console.error(`Error setting up browser for ${key}:`, error);
             setTimeout(() => setupProcess(), 30000); // Retry setup after 30 seconds
+        } finally {
+            setupInProgress.delete(key);
         }
     };
 
@@ -221,8 +230,8 @@ app.get('/api/listen', async (req, res) => {
         return res.status(400).json({ error: 'Key is required' });
     }
 
-    if (activeBrowsers.has(key)) {
-        return res.status(400).json({ error: 'Browser already listening for this key' });
+    if (activeBrowsers.has(key) || setupInProgress.has(key)) {
+        return res.status(400).json({ error: 'Browser already listening or setup in progress for this key' });
     }
 
     try {
@@ -265,7 +274,7 @@ app.get('/api/stats', async (req, res) => {
 
     const hashedKey = crypto.createHash('sha256').update(key).digest('hex');
 
-    if (!activeBrowsers.has(key)) {
+    if (!activeBrowsers.has(key) && !setupInProgress.has(key)) {
         if (autostart.toLowerCase() === 'true') {
             try {
                 await setupBrowserAndPage(key);
