@@ -1,6 +1,6 @@
-name: "GEOdnet Headless Console API"
-description: "API for GEOdnet Console data"
-version: "1.0.7"
+name: "Geodnet Headless Console API"
+description: "API for Geodnet Console data"
+version: "1.0.8"
 slug: "geodnet_headless_console_api"
 init: false
 arch:
