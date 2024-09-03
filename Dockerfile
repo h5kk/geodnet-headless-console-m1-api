@@ -9,10 +9,6 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont
 
-# Set environment variables for Puppeteer
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
 # Set the working directory
 WORKDIR /usr/src/app
 
