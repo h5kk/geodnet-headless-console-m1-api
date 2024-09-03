@@ -16,6 +16,8 @@ const latestSatelliteData = new Map();
 const lastActivityTime = new Map();
 const setupInProgress = new Set();
 
+const REFRESH_INTERVAL = 60 * 60 * 1000; // 60 minutes in milliseconds
+
 function countEffectiveSats(data, snrThreshold = 32) {
     const satSystems = ['satinfoG', 'satinfoR', 'satinfoE', 'satinfoC'];
     
@@ -181,7 +183,12 @@ async function setupBrowserAndPage(key) {
                 }
             }, 1000);
 
-            activeBrowsers.set(key, { browser, page, intervalId });
+            const refreshIntervalId = setInterval(async () => {
+                console.log(`Refreshing browser for key: ${key}`);
+                await refreshBrowser(key);
+            }, REFRESH_INTERVAL);
+
+            activeBrowsers.set(key, { browser, page, intervalId, refreshIntervalId });
             console.log(`Listener for ${key} started successfully.`);
         } catch (error) {
             console.error(`Error setting up browser for ${key}:`, error);
@@ -194,10 +201,23 @@ async function setupBrowserAndPage(key) {
     await setupProcess();
 }
 
+async function refreshBrowser(key) {
+    if (activeBrowsers.has(key)) {
+        const { browser, page, intervalId, refreshIntervalId } = activeBrowsers.get(key);
+        clearInterval(intervalId);
+        await browser.close();
+        activeBrowsers.delete(key);
+
+        // Re-setup the browser and page
+        await setupBrowserAndPage(key);
+    }
+}
+
 async function shutdownBrowser(key) {
     if (activeBrowsers.has(key)) {
-        const { browser, intervalId } = activeBrowsers.get(key);
+        const { browser, intervalId, refreshIntervalId } = activeBrowsers.get(key);
         clearInterval(intervalId);
+        clearInterval(refreshIntervalId);
         await browser.close();
         activeBrowsers.delete(key);
 
@@ -334,8 +354,9 @@ app.listen(port, () => {
 
 process.on('SIGINT', async () => {
     console.log('Shutting down gracefully');
-    for (const [key, { browser, intervalId }] of activeBrowsers.entries()) {
+    for (const [key, { browser, intervalId, refreshIntervalId }] of activeBrowsers.entries()) {
         clearInterval(intervalId);
+        clearInterval(refreshIntervalId);
         await browser.close();
     }
     activeBrowsers.clear();
