@@ -83,41 +83,48 @@ async function setupBrowserAndPage(key) {
 
     const setupProcess = async () => {
         try {
-            // Launch browser with conditional options
+            console.log(`Configuring launch options for key: ${key}`);
             const launchOptions = {
                 headless: true,
                 args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
             };
 
-            // Only add executablePath if PUPPETEER_EXECUTABLE_PATH is set
             if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+                console.log(`Using custom Chromium path: ${process.env.PUPPETEER_EXECUTABLE_PATH}`);
                 launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+            } else {
+                console.log('Using default Chromium path');
             }
 
+            console.log(`Launching browser for key: ${key}`);
             const browser = await puppeteer.launch(launchOptions);
+            console.log(`Browser launched successfully for key: ${key}`);
 
+            console.log(`Creating new page for key: ${key}`);
             const page = await browser.newPage();
+            console.log(`New page created for key: ${key}`);
 
-            //load geodnet console, map
-            await page.goto('https://console.geodnet.com/map',
-                { timeout: 90000 }
-            );
+            console.log(`Navigating to GEOdnet console for key: ${key}`);
+            await page.goto('https://console.geodnet.com/map', { timeout: 90000 });
+            console.log(`Navigation completed for key: ${key}`);
 
-            // Wait for the loading dimmer to become hidden
-            console.log("waiting for map")
+            console.log(`Waiting for map to load for key: ${key}`);
             await page.waitForFunction(
                 () => !document.querySelector('.ui.active.dimmer.loadingVerifyMountpoint') || 
                        document.querySelector('.ui.active.dimmer.loadingVerifyMountpoint').style.display === 'none',
                 { timeout: 90000 }
             );
-            console.log("loaded map")
+            console.log(`Map loaded successfully for key: ${key}`);
 
-
+            console.log(`Typing miner key: ${key}`);
             await page.type('#mount_query', key);
+            console.log(`Miner key typed for: ${key}`);
 
+            console.log(`Waiting for miner table to load for key: ${key}`);
             await page.waitForSelector('.mineTableColumn', { timeout: 90000 });
+            console.log(`Miner table loaded for key: ${key}`);
 
-
+            console.log(`Setting up data extraction for key: ${key}`);
             await page.evaluate(() => {
                 if (Meteor && Meteor.connection) {
                     const originalCall = Meteor.call;
@@ -154,6 +161,7 @@ async function setupBrowserAndPage(key) {
                     };
                 }
             });
+            console.log(`Data extraction setup completed for key: ${key}`);
 
             const getLastData = async () => {
                 return await page.evaluate(() => ({
@@ -162,6 +170,7 @@ async function setupBrowserAndPage(key) {
                 }));
             };
 
+            console.log(`Clicking on miner row for key: ${key}`);
             await page.evaluate((key) => {
                 const rows = document.querySelectorAll('tr.mineTableColumn');
                 for (let row of rows) {
@@ -171,24 +180,28 @@ async function setupBrowserAndPage(key) {
                     }
                 }
             }, key);
+            console.log(`Miner row clicked for key: ${key}`);
 
+            console.log(`Setting up data polling interval for key: ${key}`);
             const intervalId = setInterval(async () => {
                 try {
                     const newData = await getLastData();
                     const existingData = latestSatelliteData.get(hashedKey);
                     
                     if ( (!existingData && newData) || (newData && existingData && newData.lastPacketTime !== existingData.lastPacketTime) ) {
+                        console.log(`Updating data for key: ${key}`);
                         latestSatelliteData.set(hashedKey, newData);
                     }
-
                 } catch (error) {
                     console.error(`Error extracting data for ${key}:`, error);
                     clearInterval(intervalId);
                     await browser.close();
-                    setTimeout(() => setupProcess(), 30000); // Restart after 30 seconds
+                    console.log(`Scheduling browser restart for key: ${key}`);
+                    setTimeout(() => setupProcess(), 30000);
                 }
             }, 1000);
 
+            console.log(`Setting up browser refresh interval for key: ${key}`);
             const refreshIntervalId = setInterval(async () => {
                 console.log(`Refreshing browser for key: ${key}`);
                 await refreshBrowser(key);
@@ -198,9 +211,11 @@ async function setupBrowserAndPage(key) {
             console.log(`Listener for ${key} started successfully.`);
         } catch (error) {
             console.error(`Error setting up browser for ${key}:`, error);
-            setTimeout(() => setupProcess(), 30000); // Retry setup after 30 seconds
+            console.log(`Scheduling retry for key: ${key}`);
+            setTimeout(() => setupProcess(), 30000);
         } finally {
             setupInProgress.delete(key);
+            console.log(`Setup process completed for key: ${key}`);
         }
     };
 
