@@ -3,7 +3,6 @@ FROM $BUILD_FROM
 
 # Install dependencies for Puppeteer and Node.js
 RUN apk add --no-cache \
-    chromium \
     nss \
     freetype \
     harfbuzz \
@@ -12,9 +11,6 @@ RUN apk add --no-cache \
     nodejs \
     npm
 
-# Set environment variables for Puppeteer
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Set the working directory
 WORKDIR /usr/src/app
