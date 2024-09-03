@@ -83,13 +83,18 @@ async function setupBrowserAndPage(key) {
 
     const setupProcess = async () => {
         try {
-            //launch browser
-            const browser = await puppeteer.launch({ 
+            // Launch browser with conditional options
+            const launchOptions = {
                 headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
-                // defaultViewport: null,
-                // args: ['--start-maximized']
-            });
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+            };
+
+            // Only add executablePath if PUPPETEER_EXECUTABLE_PATH is set
+            if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+                launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+            }
+
+            const browser = await puppeteer.launch(launchOptions);
 
             const page = await browser.newPage();
 
