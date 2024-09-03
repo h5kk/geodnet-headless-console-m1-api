@@ -9,14 +9,13 @@ app.use(cors());
 
 const port = process.env.PORT || 3000;
 
-const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+const REFRESH_INTERVAL = parseInt(process.env.REFRESH_INTERVAL || '60') * 60 * 1000; // Convert minutes to milliseconds
+const INACTIVITY_TIMEOUT = parseInt(process.env.INACTIVITY_TIMEOUT || '5') * 60 * 1000; // Convert minutes to milliseconds
 
 const activeBrowsers = new Map();
 const latestSatelliteData = new Map();
 const lastActivityTime = new Map();
 const setupInProgress = new Set();
-
-const REFRESH_INTERVAL = 60 * 60 * 1000; // 60 minutes in milliseconds
 
 function countEffectiveSats(data, snrThreshold = 32) {
     const satSystems = ['satinfoG', 'satinfoR', 'satinfoE', 'satinfoC'];

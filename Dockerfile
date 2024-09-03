@@ -1,4 +1,5 @@
-FROM node:lts-bullseye-slim
+ARG BUILD_FROM
+FROM $BUILD_FROM
 
 # Prevent dpkg errors
 ENV DEBIAN_FRONTEND=noninteractive
