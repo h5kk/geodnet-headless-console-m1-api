@@ -7,7 +7,7 @@ This addon provides an API for accessing GEOdnet Console data.
 1. Navigate to your Home Assistant's Supervisor panel.
 2. In the sidebar click on "Add-on Store".
 3. Click the menu icon (⋮) in the top right corner and select "Repositories".
-4. Add this repository URL: `https://github.com/yourusername/your-repo-name`
+4. Add this repository URL: `https://github.com/erikarenhill/geodnet-headless-console-api`
 5. Click "Add".
 6. The "GEOdnet Headless Console API" addon should now be visible in the addon store.
 7. Click on it and then click "Install".
