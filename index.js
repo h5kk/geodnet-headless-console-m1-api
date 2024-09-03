@@ -87,7 +87,7 @@ async function setupBrowserAndPage(key) {
         try {
             console.log(`Configuring launch options for key: ${key}`);
             const launchOptions = {
-                args: chromium.args,
+                args: ['--no-sandbox', "--disabled-setupid-sandbox"],
                 defaultViewport: chromium.defaultViewport,
                 executablePath: await chromium.executablePath,
                 headless: true,
