@@ -1,16 +1,9 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-ARG NODE_VERSION=20
-ENV NODE_VERSION=${NODE_VERSION}
 
 # Prevent dpkg errors
 ENV DEBIAN_FRONTEND=noninteractive
-
-# Install Node.js
-RUN apt-get update && apt-get install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
-    apt-get install -y nodejs
 
 # Install dependencies for Puppeteer
 RUN apt-get update && apt-get install -y \

@@ -52,7 +52,6 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           build-args: |
             BUILD_FROM=homeassistant/${{ matrix.arch }}-base:latest
-            NODE_VERSION=20
 
   create-release:
     needs: docker
