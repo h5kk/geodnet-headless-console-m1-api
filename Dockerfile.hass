@@ -3,6 +3,7 @@ FROM $BUILD_FROM
 
 # Install dependencies for Puppeteer and Node.js
 RUN apk add --no-cache \
+    chromium \
     nss \
     freetype \
     harfbuzz \
