@@ -1,17 +1,18 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-# Install dependencies for Puppeteer and Node.js
+# Install dependencies
 RUN apk add --no-cache \
-    chromium \
+    nodejs \
+    npm \
     nss \
     freetype \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
-    nodejs \
-    npm
-
+    python3 \
+    make \
+    g++
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -21,6 +22,8 @@ COPY package*.json ./
 
 # Install app dependencies
 RUN npm ci
+
+RUN node .\node_modules\puppeteer-core\install.js
 
 # Copy app source
 COPY . .

@@ -2,7 +2,6 @@ FROM node:lts-alpine
 
 # Install dependencies for Puppeteer
 RUN apk add --no-cache \
-    chromium \
     nss \
     freetype \
     harfbuzz \
@@ -17,6 +16,8 @@ COPY package*.json ./
 
 # Install app dependencies
 RUN npm ci
+
+RUN node .\node_modules\puppeteer-core\install.js
 
 # Copy app source
 COPY . .

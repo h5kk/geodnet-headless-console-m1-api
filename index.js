@@ -1,4 +1,5 @@
-const puppeteer = require('puppeteer');
+const chromium = require('chrome-aws-lambda');
+const puppeteer = require('puppeteer-core');
 const express = require('express');
 const crypto = require('crypto');
 const cors = require('cors');
@@ -72,6 +73,7 @@ function aggregateSatInfo(data) {
 
 async function setupBrowserAndPage(key) {
     const hashedKey = crypto.createHash('sha256').update(key).digest('hex');
+    const startTime = Date.now();
 
     if (setupInProgress.has(key)) {
         console.log(`Setup already in progress for key: ${key}`);
@@ -85,46 +87,49 @@ async function setupBrowserAndPage(key) {
         try {
             console.log(`Configuring launch options for key: ${key}`);
             const launchOptions = {
+                args: chromium.args,
+                defaultViewport: chromium.defaultViewport,
+                executablePath: await chromium.executablePath,
                 headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+                ignoreHTTPSErrors: true,
             };
 
-            if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-                console.log(`Using custom Chromium path: ${process.env.PUPPETEER_EXECUTABLE_PATH}`);
-                launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
-            } else {
-                console.log('Using default Chromium path');
-            }
-
             console.log(`Launching browser for key: ${key}`);
+            const browserStartTime = Date.now();
             const browser = await puppeteer.launch(launchOptions);
-            console.log(`Browser launched successfully for key: ${key}`);
+            console.log(`Browser launched successfully for key: ${key}. Time taken: ${Date.now() - browserStartTime}ms`);
 
             console.log(`Creating new page for key: ${key}`);
+            const pageStartTime = Date.now();
             const page = await browser.newPage();
-            console.log(`New page created for key: ${key}`);
+            console.log(`New page created for key: ${key}. Time taken: ${Date.now() - pageStartTime}ms`);
 
             console.log(`Navigating to GEOdnet console for key: ${key}`);
+            const navigationStartTime = Date.now();
             await page.goto('https://console.geodnet.com/map', { timeout: 90000 });
-            console.log(`Navigation completed for key: ${key}`);
+            console.log(`Navigation completed for key: ${key}. Time taken: ${Date.now() - navigationStartTime}ms`);
 
             console.log(`Waiting for map to load for key: ${key}`);
+            const mapLoadStartTime = Date.now();
             await page.waitForFunction(
                 () => !document.querySelector('.ui.active.dimmer.loadingVerifyMountpoint') || 
                        document.querySelector('.ui.active.dimmer.loadingVerifyMountpoint').style.display === 'none',
                 { timeout: 90000 }
             );
-            console.log(`Map loaded successfully for key: ${key}`);
+            console.log(`Map loaded successfully for key: ${key}. Time taken: ${Date.now() - mapLoadStartTime}ms`);
 
             console.log(`Typing miner key: ${key}`);
+            const typingStartTime = Date.now();
             await page.type('#mount_query', key);
-            console.log(`Miner key typed for: ${key}`);
+            console.log(`Miner key typed for: ${key}. Time taken: ${Date.now() - typingStartTime}ms`);
 
             console.log(`Waiting for miner table to load for key: ${key}`);
+            const tableLoadStartTime = Date.now();
             await page.waitForSelector('.mineTableColumn', { timeout: 90000 });
-            console.log(`Miner table loaded for key: ${key}`);
+            console.log(`Miner table loaded for key: ${key}. Time taken: ${Date.now() - tableLoadStartTime}ms`);
 
             console.log(`Setting up data extraction for key: ${key}`);
+            const extractionSetupStartTime = Date.now();
             await page.evaluate(() => {
                 if (Meteor && Meteor.connection) {
                     const originalCall = Meteor.call;
@@ -161,7 +166,7 @@ async function setupBrowserAndPage(key) {
                     };
                 }
             });
-            console.log(`Data extraction setup completed for key: ${key}`);
+            console.log(`Data extraction setup completed for key: ${key}. Time taken: ${Date.now() - extractionSetupStartTime}ms`);
 
             const getLastData = async () => {
                 return await page.evaluate(() => ({
@@ -171,6 +176,7 @@ async function setupBrowserAndPage(key) {
             };
 
             console.log(`Clicking on miner row for key: ${key}`);
+            const clickStartTime = Date.now();
             await page.evaluate((key) => {
                 const rows = document.querySelectorAll('tr.mineTableColumn');
                 for (let row of rows) {
@@ -180,7 +186,7 @@ async function setupBrowserAndPage(key) {
                     }
                 }
             }, key);
-            console.log(`Miner row clicked for key: ${key}`);
+            console.log(`Miner row clicked for key: ${key}. Time taken: ${Date.now() - clickStartTime}ms`);
 
             console.log(`Setting up data polling interval for key: ${key}`);
             const intervalId = setInterval(async () => {
@@ -208,14 +214,14 @@ async function setupBrowserAndPage(key) {
             }, REFRESH_INTERVAL);
 
             activeBrowsers.set(key, { browser, page, intervalId, refreshIntervalId });
-            console.log(`Listener for ${key} started successfully.`);
+            console.log(`Listener for ${key} started successfully. Total setup time: ${Date.now() - startTime}ms`);
         } catch (error) {
             console.error(`Error setting up browser for ${key}:`, error);
             console.log(`Scheduling retry for key: ${key}`);
             setTimeout(() => setupProcess(), 30000);
         } finally {
             setupInProgress.delete(key);
-            console.log(`Setup process completed for key: ${key}`);
+            console.log(`Setup process completed for key: ${key}. Total time: ${Date.now() - startTime}ms`);
         }
     };
 
