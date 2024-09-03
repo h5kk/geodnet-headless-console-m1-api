@@ -95,7 +95,9 @@ async function setupBrowserAndPage(key) {
             const page = await browser.newPage();
 
             //load geodnet console, map
-            await page.goto('https://console.geodnet.com/map');
+            await page.goto('https://console.geodnet.com/map',
+                { timeout: 90000 }
+            );
 
             // Wait for the loading dimmer to become hidden
             console.log("waiting for map")
