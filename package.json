@@ -1,5 +1,5 @@
 {
-  "name": "scraper",
+  "name": "geodnet-headless-console-api",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
