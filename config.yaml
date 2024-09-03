@@ -1,6 +1,6 @@
 name: "GEOdnet Headless Console API"
 description: "API for GEOdnet Console data"
-version: "1.0.1"
+version: "1.0.2"
 slug: "geodnet_headless_console_api"
 init: false
 arch:
@@ -8,6 +8,7 @@ arch:
 ports:
   3000/tcp: 3000
 options:
+  server: "http://geodnet.local:3000"
   refresh_interval: 60
   inactivity_timeout: 5
   proxy_pass_host: true
