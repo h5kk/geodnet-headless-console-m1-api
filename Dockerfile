@@ -17,10 +17,11 @@ COPY package*.json ./
 # Install app dependencies
 RUN npm ci
 
-RUN node .\node_modules\puppeteer-core\install.js
 
 # Copy app source
 COPY . .
+
+RUN node ./node_modules/puppeteer-core/install.js
 
 # Expose port
 EXPOSE 3000
