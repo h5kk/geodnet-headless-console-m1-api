@@ -11,7 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: ["amd64"]
+        include:
+          - type: normal
+            dockerfile: Dockerfile
+            image: ghcr.io/${{ github.repository }}
+          - type: hass
+            dockerfile: Dockerfile.hass
+            image: ghcr.io/${{ github.repository }}-hass
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,8 +26,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ghcr.io/${{ github.repository }}-hass
+          images: ${{ matrix.image }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -46,12 +51,13 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ${{ matrix.dockerfile }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/${{ matrix.arch }}
+          platforms: linux/amd64
           build-args: |
-            BUILD_FROM=homeassistant/${{ matrix.arch }}-base:latest
+            BUILD_FROM=homeassistant/amd64-base:latest
 
   create-release:
     needs: docker

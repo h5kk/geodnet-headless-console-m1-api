@@ -16,3 +16,4 @@ schema:
   refresh_interval: int
   inactivity_timeout: int
 startup: application
+url: "https://github.com/erikarenhill/geodnet-headless-console-api"

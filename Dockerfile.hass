@@ -1,13 +1,16 @@
-FROM node:lts-alpine
+ARG BUILD_FROM
+FROM $BUILD_FROM
 
-# Install dependencies for Puppeteer
+# Install dependencies for Puppeteer and Node.js
 RUN apk add --no-cache \
     chromium \
     nss \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    nodejs \
+    npm
 
 # Set environment variables for Puppeteer
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \

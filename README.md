@@ -4,9 +4,13 @@ This addon provides an API for accessing GEOdnet Console data.
 
 ## Installation
 
-1. Add this repository to your Home Assistant instance.
-2. Install the "GEOdnet Headless Console API" addon.
-3. Start the addon.
+1. Navigate to your Home Assistant's Supervisor panel.
+2. In the sidebar click on "Add-on Store".
+3. Click the menu icon (⋮) in the top right corner and select "Repositories".
+4. Add this repository URL: `https://github.com/yourusername/your-repo-name`
+5. Click "Add".
+6. The "GEOdnet Headless Console API" addon should now be visible in the addon store.
+7. Click on it and then click "Install".
 
 ## Configuration
 
@@ -26,3 +30,22 @@ Available endpoints:
 - `/api/stats?key=<miner_key>&autostart=true`: Get stats for a specific miner. Set `autostart=true` to automatically start listening if not already.
 
 Replace `<miner_key>` with the last 5 characters of your miner's serial number.
+
+## Development
+
+For local development:
+
+1. Clone this repository.
+2. Install dependencies with `npm install`.
+3. Run the server with `npm start`.
+
+## Building
+
+To build the Docker images:
+
+1. For a normal Docker image: `docker build -t geodnet-headless-console-api .`
+2. For a Home Assistant addon: `docker build -t geodnet-headless-console-api-hass -f Dockerfile.hass .`
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
