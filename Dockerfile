@@ -1,8 +1,8 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-# Install dependencies
-RUN apk add --no-cache \
+# Install dependencies for chrome-aws-lambda
+RUN apk --no-cache add \
     nodejs \
     npm \
     nss \
@@ -13,13 +13,16 @@ RUN apk add --no-cache \
     python3 \
     make \
     g++ \
-    chromium \
-    udev \
-    dumb-init \
-    libstdc++ \
-    libc6-compat \
-    chromium-chromedriver
-
+    curl \
+    fontconfig \
+    alsa-lib \
+    at-spi2-core \
+    cairo \
+    cups-libs \
+    dbus-glib \
+    eudev-libs \
+    expat \
+    ttf-opensans
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -27,8 +30,8 @@ WORKDIR /usr/src/app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install app dependencies
-RUN npm ci
+# Install Puppeteer and chrome-aws-lambda dependencies
+RUN npm install
 
 # Copy app source
 COPY . .
