@@ -1,25 +1,12 @@
-ARG BUILD_FROM
-FROM $BUILD_FROM
+FROM node:lts-alpine
 
-# Install dependencies
+# Install dependencies for Puppeteer
 RUN apk add --no-cache \
-    nodejs \
-    npm \
     nss \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont \
-    python3 \
-    make \
-    g++ \
-    chromium \
-    udev \
-    dumb-init \
-    libstdc++ \
-    libc6-compat \
-    chromium-chromedriver
-
+    ttf-freefont
 
 # Set the working directory
 WORKDIR /usr/src/app

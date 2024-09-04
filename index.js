@@ -87,7 +87,15 @@ async function setupBrowserAndPage(key) {
         try {
             console.log(`Configuring launch options for key: ${key}`);
             const launchOptions = {
-                args: ['--no-sandbox', "--disabled-setupid-sandbox"],
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--no-first-run',
+                    '--no-zygote',
+                    '--disable-gpu'
+                ],
                 headless: true,
             };
 
