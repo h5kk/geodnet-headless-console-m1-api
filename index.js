@@ -1,5 +1,4 @@
-const chromium = require('chrome-aws-lambda');
-const puppeteer = require('puppeteer-core');
+const puppeteer = require('puppeteer');
 const express = require('express');
 const crypto = require('crypto');
 const cors = require('cors');
@@ -87,9 +86,8 @@ async function setupBrowserAndPage(key) {
         try {
             console.log(`Configuring launch options for key: ${key}`);
             const launchOptions = {
-                args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
-                executablePath: await chromium.executablePath,
-                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox'],
+                headless: "new",
             };
 
             console.log(`Launching browser for key: ${key}`);
