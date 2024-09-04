@@ -39,12 +39,6 @@ For local development:
 2. Install dependencies with `npm install`.
 3. Run the server with `npm start`.
 
-## Building
-
-To build the Docker images:
-
-1. For a normal Docker image: `docker build -t geodnet-headless-console-api .`
-2. For a Home Assistant addon: `docker build -t geodnet-headless-console-api-hass -f Dockerfile.hass .`
 
 ## Contributing
 

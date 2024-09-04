@@ -9,15 +9,6 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - type: hass
-            dockerfile: Dockerfile
-            image: ghcr.io/${{ github.repository }}
-          - type: standalone
-            dockerfile: Dockerfile.standalone
-            image: ghcr.io/${{ github.repository }}-standalone
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,7 +17,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ matrix.image }}
+          images: ghcr.io/${{ github.repository }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -51,13 +42,13 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ${{ matrix.dockerfile }}
+          file: Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
           build-args: |
-            BUILD_FROM=${{ matrix.type == 'hass' && 'ghcr.io/hassio-addons/debian-base/amd64:7.3.1' || '' }}
+            BUILD_FROM=ghcr.io/hassio-addons/debian-base/amd64:7.3.1
 
   create-release:
     needs: docker
