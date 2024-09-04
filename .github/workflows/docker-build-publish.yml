@@ -57,7 +57,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
           build-args: |
-            BUILD_FROM=${{ matrix.type == 'hass' && 'homeassistant/amd64-base:latest' || '' }}
+            BUILD_FROM=${{ matrix.type == 'hass' && 'ghcr.io/hassio-addons/debian-base/amd64:7.3.1' || '' }}
 
   create-release:
     needs: docker
