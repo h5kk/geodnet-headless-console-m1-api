@@ -4,7 +4,9 @@ version: "1.0.12"
 slug: "geodnet_headless_console_api"
 init: false
 arch:
+  - aarch64
   - amd64
+  - armv7
 ports:
   3000/tcp: 3000
 options:
