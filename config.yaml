@@ -1,14 +1,18 @@
 name: "Geodnet Headless Console API"
-description: "API for Geodnet Console data"
-version: "1.0.12"
+version: "1.0.13"
 slug: "geodnet_headless_console_api"
-init: false
+description: "API for Geodnet Console data with improved platform compatibility"
+url: "https://github.com/erikarenhill/geodnet-headless-console-api"
 arch:
   - aarch64
   - amd64
   - armv7
+init: false
+startup: application
 ports:
   3000/tcp: 3000
+ports_description:
+  3000/tcp: "API port (required)"
 options:
   refresh_interval: 60
   inactivity_timeout: 5
@@ -17,5 +21,5 @@ options:
 schema:
   refresh_interval: int
   inactivity_timeout: int
-startup: application
-url: "https://github.com/erikarenhill/geodnet-headless-console-api"
+  proxy_pass_host: bool
+  proxy_pass_real_ip: bool
