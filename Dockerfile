@@ -1,42 +1,56 @@
-ARG BUILD_FROM
-FROM $BUILD_FROM
+﻿ARG BUILD_FROM
+FROM ${BUILD_FROM}
 
-# Setup base system
+# Set shell
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Add Supervisor integration
+COPY rootfs /
+
+ENV \
+    DEBIAN_FRONTEND="noninteractive" \
+    CHROMIUM_FLAGS="--disable-gpu --disable-software-rasterizer --disable-dev-shm-usage --no-sandbox"
+
+# Set up prerequisites
 RUN \
     apt-get update \
     && apt-get install -y --no-install-recommends \
+        curl \
         chromium \
         chromium-l10n \
         nodejs \
         npm \
+        git \
+        procps \
         ca-certificates \
-        fonts-liberation \
-        wget \
         gnupg \
-        curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm install -g npm@latest
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Create app directory
 WORKDIR /usr/src/app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install app dependencies
 RUN npm ci --only=production
 
-# Copy application files
+# Copy app source
 COPY . .
 
-# Set environment variables
-ENV \
-    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
-    NODE_ENV=production
+# Set environment variables for Puppeteer
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Copy data for add-on
-COPY run.sh /
-RUN chmod a+x /run.sh
+# Copy root filesystem
+COPY rootfs /
 
-CMD [ "/run.sh" ]
+# Make scripts executable
+RUN chmod a+x /etc/services.d/*/run \
+    && chmod a+x /etc/s6-overlay/s6-rc.d/*/run
+
+ENTRYPOINT ["/init"]
+CMD []

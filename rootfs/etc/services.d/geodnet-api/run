@@ -1,0 +1,14 @@
+﻿#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Start the Geodnet API service
+# ==============================================================================
+
+# Set environment variables from config
+export REFRESH_INTERVAL=$(bashio::config 'refresh_interval')
+export INACTIVITY_TIMEOUT=$(bashio::config 'inactivity_timeout')
+export LOG_LEVEL=$(bashio::config 'log_level')
+
+cd /usr/src/app
+
+bashio::log.info "Starting Geodnet Headless Console API..."
+exec node index.js
