@@ -11,6 +11,10 @@ init: false
 startup: application
 stage: experimental
 boot: auto
+hassio_api: true
+hassio_role: default
+map:
+  - share:rw
 ports:
   3000/tcp: 3000
 ports_description:
@@ -20,10 +24,11 @@ options:
   inactivity_timeout: 5
   proxy_pass_host: true
   proxy_pass_real_ip: true
-  log_level: info
+  log_level: debug
 schema:
   refresh_interval: int
   inactivity_timeout: int
   proxy_pass_host: bool
   proxy_pass_real_ip: bool
   log_level: list(trace|debug|info|notice|warning|error|fatal)
+image: "ghcr.io/{arch}-addon-geodnet-headless-console-api"
