@@ -1,56 +1,47 @@
 ﻿ARG BUILD_FROM
-FROM ${BUILD_FROM}
+FROM $BUILD_FROM
 
-# Set shell
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# Add Supervisor integration
-COPY rootfs /
-
+# Environment variables
 ENV \
     DEBIAN_FRONTEND="noninteractive" \
-    CHROMIUM_FLAGS="--disable-gpu --disable-software-rasterizer --disable-dev-shm-usage --no-sandbox"
+    LANG="C.UTF-8" \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true" \
+    PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium"
 
-# Set up prerequisites
+# Install dependencies
 RUN \
     apt-get update \
     && apt-get install -y --no-install-recommends \
-        curl \
-        chromium \
-        chromium-l10n \
-        nodejs \
-        npm \
-        git \
-        procps \
         ca-certificates \
+        curl \
         gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
-    && apt-get clean \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        nodejs \
+        chromium \
+        fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
-# Create app directory
+# Set working directory
 WORKDIR /usr/src/app
 
 # Copy package files
 COPY package*.json ./
 
-# Install app dependencies
+# Install dependencies
 RUN npm ci --only=production
 
-# Copy app source
+# Copy application files
 COPY . .
-
-# Set environment variables for Puppeteer
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Copy root filesystem
 COPY rootfs /
 
 # Make scripts executable
-RUN chmod a+x /etc/services.d/*/run \
-    && chmod a+x /etc/s6-overlay/s6-rc.d/*/run
+RUN chmod a+x /etc/services.d/geodnet-api/run \
+    && chmod a+x /etc/services.d/geodnet-api/finish
 
-ENTRYPOINT ["/init"]
-CMD []
+CMD [ "/usr/src/app/run.sh" ]

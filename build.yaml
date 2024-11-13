@@ -1,9 +1,9 @@
 ﻿build_from:
-  aarch64: ghcr.io/home-assistant/debian-base/aarch64:bullseye
-  amd64: ghcr.io/home-assistant/debian-base/amd64:bullseye
-  armv7: ghcr.io/home-assistant/debian-base/armv7:bullseye
-codenotary:
-  signer: notary@home-assistant.io
-  base_image: notary@home-assistant.io
+  aarch64: ghcr.io/home-assistant/aarch64-base-debian:bullseye
+  amd64: ghcr.io/home-assistant/amd64-base-debian:bullseye
+  armv7: ghcr.io/home-assistant/armv7-base-debian:bullseye
+labels:
+  io.hass.type: "addon"
+  io.hass.version: "1.0.13"
 args:
   TEMPIO_VERSION: "2021.09.0"

@@ -1,8 +1,4 @@
 #!/usr/bin/with-contenv bashio
-set -e
-
-# Print some information
-bashio::log.info "Starting Geodnet Headless Console API..."
 
 # Get config values
 export REFRESH_INTERVAL=$(bashio::config 'refresh_interval')
