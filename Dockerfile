@@ -1,42 +1,42 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-# Set shell
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# Setup base
+# Setup base system
 RUN \
-    apk add --no-cache \
+    apt-get update \
+    && apt-get install -y --no-install-recommends \
+        chromium \
+        chromium-l10n \
         nodejs \
         npm \
-        chromium \
-        nss \
-        freetype \
-        freetype-dev \
-        harfbuzz \
         ca-certificates \
-        ttf-freefont \
-        nodejs \
-        yarn
+        fonts-liberation \
+        wget \
+        gnupg \
+        curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install -g npm@latest
 
-# Create app directory
+# Set working directory
 WORKDIR /usr/src/app
 
 # Copy package files
 COPY package*.json ./
 
-# Install app dependencies
-RUN npm ci
+# Install dependencies
+RUN npm ci --only=production
 
-# Copy app source
+# Copy application files
 COPY . .
 
-# Expose port
-EXPOSE 3000
+# Set environment variables
+ENV \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
+    NODE_ENV=production
 
-# Define environment variable for Puppeteer
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# Copy data for add-on
+COPY run.sh /
+RUN chmod a+x /run.sh
 
-# Start the app
-CMD ["node", "index.js"]
+CMD [ "/run.sh" ]

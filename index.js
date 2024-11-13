@@ -17,6 +17,30 @@ const latestSatelliteData = new Map();
 const lastActivityTime = new Map();
 const setupInProgress = new Set();
 
+// Add detailed logging
+const log = {
+    info: (msg, ...args) => console.log(`[INFO] ${msg}`, ...args),
+    error: (msg, ...args) => console.error(`[ERROR] ${msg}`, ...args),
+    debug: (msg, ...args) => console.log(`[DEBUG] ${msg}`, ...args)
+};
+
+// Log system information on startup
+log.info('Starting Geodnet Headless Console API');
+log.info(`Node version: ${process.version}`);
+log.info(`Platform: ${process.platform}`);
+log.info(`Architecture: ${process.arch}`);
+log.info(`Refresh interval: ${REFRESH_INTERVAL}ms`);
+log.info(`Inactivity timeout: ${INACTIVITY_TIMEOUT}ms`);
+
+// Add error handling for uncaught exceptions
+process.on('uncaughtException', (error) => {
+    log.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    log.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 // Platform-specific browser configuration
 const getPlatformSpecificLaunchOptions = () => ({
     args: [
@@ -200,3 +224,4 @@ process.on('SIGTERM', async () => {
 app.listen(port, '0.0.0.0', () => {
     console.log(`Server running at http://0.0.0.0:${port}`);
 });
+

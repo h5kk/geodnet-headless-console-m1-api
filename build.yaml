@@ -1,4 +1,9 @@
 build_from:
-  aarch64: ghcr.io/hassio-addons/debian-base/aarch64:7.3.1
-  amd64: ghcr.io/hassio-addons/debian-base/amd64:7.3.1
-  armv7: ghcr.io/hassio-addons/debian-base/armv7:7.3.1
+  aarch64: ghcr.io/home-assistant/debian-base/aarch64:debian-11
+  amd64: ghcr.io/home-assistant/debian-base/amd64:debian-11
+  armv7: ghcr.io/home-assistant/debian-base/armv7:debian-11
+args:
+  TEMPIO_VERSION: "2021.09.0"
+labels:
+  io.hass.type: "addon"
+  io.hass.version: "1.0.13"
